@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block title %}My Payments - RentalSystem{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            <div class="sidebar rounded p-3">
+                <h5 class="text-center mb-4">Owner Dashboard</h5>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'owner_dashboard' %}">
+                            <i class="fas fa-tachometer-alt"></i> Overview
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'property_list' %}">
+                            <i class="fas fa-home"></i> My Properties
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'add_property' %}">
+                            <i class="fas fa-plus-circle"></i> Add Property
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'owner_booking_list' %}">
+                            <i class="fas fa-calendar-check"></i> Bookings
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{% url 'owner_payments' %}">
+                            <i class="fas fa-credit-card"></i> Payments
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'inbox' %}">
+                            <i class="fas fa-inbox"></i> Messages
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-9">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Payment History</h2>
+                <div>
+                    <a href="{% url 'export_payments_csv' %}" class="btn btn-outline-secondary me-2">
+                        <i class="fas fa-file-csv"></i> Export CSV
+                    </a>
+                    <a href="{% url 'export_payments_pdf' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-file-pdf"></i> Export PDF
+                    </a>
+                </div>
+            </div>
+
+            <!-- Payments Table -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-credit-card"></i> All Payments</h5>
+                </div>
+                <div class="card-body">
+                    {% if payments %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Booking ID</th>
+                                        <th>Property</th>
+                                        <th>Tenant</th>
+                                        <th>Amount</th>
+                                        <th>Payment Date</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for payment in payments %}
+                                    <tr>
+                                        <td>#{{ payment.booking.booking_id }}</td>
+                                        <td>{{ payment.booking.property.title }}</td>
+                                        <td>{{ payment.tenant.user.get_full_name }}</td>
+                                        <td>BDT {{ payment.amount }}</td>
+                                        <td>{{ payment.payment_date|default:'-' }}</td>
+                                        <td>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <span class="badge bg-{% if payment.payment_status == 'completed' %}success{% elif payment.payment_status == 'pending' %}warning{% else %}secondary{% endif %}">
+                                                    {{ payment.payment_status|title }}
+                                                </span>
+                                                {% if payment.payment_status == 'pending' %}
+                                                    {% if payment.transaction_id or payment.payment_method or payment.gateway_response %}
+                                                        <form method="post" action="{% url 'confirm_payment' payment.payment_id %}" style="display:inline-block; margin:0 0 0 8px;">
+                                                            {% csrf_token %}
+                                                            <button type="submit" class="btn btn-sm btn-success">Mark Received</button>
+                                                        </form>
+                                                    {% else %}
+                                                        <small class="text-muted">Awaiting tenant payment</small>
+                                                    {% endif %}
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No payments found.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

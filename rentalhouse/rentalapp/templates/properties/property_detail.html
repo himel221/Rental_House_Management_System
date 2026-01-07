@@ -1,0 +1,204 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ property.title }} - RentalSystem{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Property Images -->
+            <div class="card mb-4">
+                <div id="propertyCarousel" class="carousel slide" data-bs-ride="carousel">
+                    <div class="carousel-inner">
+                        {% for image in images %}
+                        <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                            {% if image.image_url %}
+                                <img src="{{ image.image_url.url }}" class="d-block w-100" alt="{{ image.caption|default:'Property Image' }}">
+                            {% else %}
+                                <img src="https://via.placeholder.com/800x400/ecf0f1/2c3e50?text=Property+Image+{{ forloop.counter }}" class="d-block w-100" alt="Property Image">
+                            {% endif %}
+                        </div>
+                        {% empty %}
+                        <div class="carousel-item active">
+                            <img src="https://via.placeholder.com/800x400/ecf0f1/2c3e50?text=No+Image+Available" class="d-block w-100" alt="No Image">
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% if images|length > 1 %}
+                    <button class="carousel-control-prev" type="button" data-bs-target="#propertyCarousel" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon"></span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#propertyCarousel" data-bs-slide="next">
+                        <span class="carousel-control-next-icon"></span>
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Property Details -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4 class="mb-0">Property Details</h4>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">{{ property.title }}</h5>
+                    <p class="card-text text-muted">
+                        <i class="fas fa-map-marker-alt"></i> {{ property.address }}, {{ property.city }}, {{ property.state }} {{ property.zip_code }}
+                    </p>
+                    
+                    <div class="property-features mb-4">
+                        <div class="row text-center">
+                            <div class="col-3">
+                                <div class="feature-item">
+                                    <i class="fas fa-bed fa-2x text-primary"></i>
+                                    <p class="mb-0"><strong>{{ property.bedrooms }}</strong></p>
+                                    <small>Bedrooms</small>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="feature-item">
+                                    <i class="fas fa-bath fa-2x text-primary"></i>
+                                    <p class="mb-0"><strong>{{ property.bathrooms }}</strong></p>
+                                    <small>Bathrooms</small>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="feature-item">
+                                    <i class="fas fa-ruler-combined fa-2x text-primary"></i>
+                                    <p class="mb-0"><strong>{{ property.area_sqft|default:"N/A" }}</strong></p>
+                                    <small>Square Feet</small>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="feature-item">
+                                    <i class="fas fa-home fa-2x text-primary"></i>
+                                    <p class="mb-0"><strong>{{ property.property_type|title }}</strong></p>
+                                    <small>Type</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h6>Description</h6>
+                    <p class="card-text">{{ property.description|linebreaks }}</p>
+
+                    {% if property.amenities %}
+                    <h6>Amenities</h6>
+                    <div class="amenities-list">
+                        {% for amenity in property.amenities.split %}
+                        <span class="badge bg-light text-dark me-2 mb-2">{{ amenity.strip }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Reviews -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Reviews</h5>
+                </div>
+                <div class="card-body">
+                    {% if reviews %}
+                        {% for review in reviews %}
+                        <div class="review-item mb-3 pb-3 border-bottom">
+                            <div class="d-flex justify-content-between">
+                                <strong>{{ review.tenant.user.first_name }} {{ review.tenant.user.last_name }}</strong>
+                                <div class="rating">
+                                    {% for i in "12345" %}
+                                    <i class="fas fa-star {% if forloop.counter <= review.rating %}text-warning{% else %}text-muted{% endif %}"></i>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <p class="mb-1">{{ review.review_text }}</p>
+                            <small class="text-muted">{{ review.created_at|date:"F j, Y" }}</small>
+                            
+                            {% if review.owner_response %}
+                            <div class="owner-response mt-2 p-2 bg-light rounded">
+                                <strong>Owner's Response:</strong>
+                                <p class="mb-0">{{ review.owner_response }}</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">No reviews yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <!-- Booking Card -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Booking Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <h3 class="text-primary">BDT {{ property.rent_amount }}</h3>
+                        <p class="text-muted">per month</p>
+                    </div>
+
+                    <div class="property-info mb-4">
+                        <div class="info-item d-flex justify-content-between mb-2">
+                            <span>Security Deposit:</span>
+                            <strong>BDT {{ property.security_deposit|default:property.rent_amount }}</strong>
+                        </div>
+                        <div class="info-item d-flex justify-content-between mb-2">
+                            <span>Available From:</span>
+                            <strong>{{ property.available_from }}</strong>
+                        </div>
+                        <div class="info-item d-flex justify-content-between mb-2">
+                            <span>Status:</span>
+                            <span class="badge bg-{% if property.status == 'available' %}success{% else %}warning{% endif %}">
+                                {{ property.status|title }}
+                            </span>
+                        </div>
+                    </div>
+
+                    {% if user.is_authenticated %}
+                        {% if user.user_type == 'tenant' and property.status == 'available' %}
+                            <a href="{% url 'book_property' property.property_id %}" class="btn btn-primary btn-lg w-100">
+                                <i class="fas fa-calendar-check"></i> Book This Property
+                            </a>
+                        {% elif user.user_type == 'tenant' %}
+                            <button class="btn btn-secondary btn-lg w-100" disabled>
+                                Currently Occupied
+                            </button>
+                        {% endif %}
+                    {% else %}
+                        <a href="{% url 'user_login' %}" class="btn btn-primary btn-lg w-100">
+                            <i class="fas fa-sign-in-alt"></i> Login to Book
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Contact Owner -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Contact Owner</h5>
+                </div>
+                <div class="card-body">
+                    <div class="owner-info text-center">
+                        <i class="fas fa-user-circle fa-3x text-muted mb-3"></i>
+                        <h6>{{ property.owner.user.first_name }} {{ property.owner.user.last_name }}</h6>
+                        <p class="text-muted small">Property Owner</p>
+                        
+                        {% if user.is_authenticated %}
+                            <a href="{% url 'send_message' %}" class="btn btn-outline-primary btn-sm w-100">
+                                <i class="fas fa-envelope"></i> Send Message
+                            </a>
+                        {% else %}
+                            <a href="{% url 'user_login' %}" class="btn btn-outline-primary btn-sm w-100">
+                                <i class="fas fa-sign-in-alt"></i> Login to Contact
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

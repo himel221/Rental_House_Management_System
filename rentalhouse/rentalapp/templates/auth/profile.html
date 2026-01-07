@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block title %}Profile - RentalSystem{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-user-cog"></i> Profile Settings</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <h5 class="mb-3">Basic Information</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">First Name</label>
+                                {{ profile_form.first_name }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Last Name</label>
+                                {{ profile_form.last_name }}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control" value="{{ user.email }}" disabled>
+                                <small class="text-muted">Email cannot be changed</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Phone</label>
+                                {{ profile_form.phone }}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Profile Picture</label>
+                            {{ profile_form.profile_picture }}
+                        </div>
+
+                        {% if user.user_type == 'tenant' and tenant_form %}
+                            <hr>
+                            <h5 class="mb-3">Tenant Information</h5>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Emergency Contact</label>
+                                    {{ tenant_form.emergency_contact }}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Employment Status</label>
+                                    {{ tenant_form.employment_status }}
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Income Range</label>
+                                    {{ tenant_form.income_range }}
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Rental History</label>
+                                {{ tenant_form.rental_history }}
+                            </div>
+                        {% endif %}
+
+                        {% if user.user_type == 'owner' and owner_form %}
+                            <hr>
+                            <h5 class="mb-3">Owner Information</h5>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Company Name</label>
+                                    {{ owner_form.company_name }}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Tax ID</label>
+                                    {{ owner_form.tax_id }}
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Bank Account Information</label>
+                                {{ owner_form.bank_account_info }}
+                            </div>
+                        {% endif %}
+
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-save"></i> Update Profile
+                        </button>
+                        <a href="{% if user.user_type == 'tenant' %}{% url 'tenant_dashboard' %}{% elif user.user_type == 'owner' %}{% url 'owner_dashboard' %}{% else %}{% url 'home' %}{% endif %}" class="btn btn-secondary btn-lg">
+                            <i class="fas fa-arrow-left"></i> Back to Dashboard
+                        </a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

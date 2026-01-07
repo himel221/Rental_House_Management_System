@@ -1,0 +1,307 @@
+{% extends 'base.html' %}
+
+{% block title %}Owner Dashboard - RentalSystem{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            <div class="sidebar rounded p-3">
+                <h5 class="text-center mb-4">Owner Dashboard</h5>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{% url 'owner_dashboard' %}">
+                            <i class="fas fa-tachometer-alt"></i> Overview
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'property_list' %}">
+                            <i class="fas fa-home"></i> My Properties
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'add_property' %}">
+                            <i class="fas fa-plus-circle"></i> Add Property
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#bookings-section">
+                            <i class="fas fa-calendar-check"></i> Bookings
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'owner_payments' %}">
+                            <i class="fas fa-credit-card"></i> Payments
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'inbox' %}">
+                            <i class="fas fa-inbox"></i> Messages
+                        </a>
+                    </li>
+                       <li class="nav-item">
+                        <a class="nav-link" href="{% url 'owner_complaints' %}">
+                            <i class="fas fa-exclamation-triangle"></i> Tenant Complaints
+                            {% if pending_complaints_count > 0 %}
+                            <span class="badge bg-danger float-end">{{ pending_complaints_count }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-9">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Welcome, {{ owner.user.first_name }}!</h2>
+                <a href="{% url 'add_property' %}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Add New Property
+                </a>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card stat-card text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4>{{ total_properties }}</h4>
+                                    <p>Properties</p>
+                                </div>
+                                <i class="fas fa-home fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stat-card text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4>{{ active_bookings }}</h4>
+                                    <p>Active Bookings</p>
+                                </div>
+                                <i class="fas fa-calendar-check fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stat-card text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4>BDT {{ total_earnings }}</h4>
+                                    <p>Total Earnings</p>
+                                </div>
+                                <i class="fas fa-dollar-sign fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+
+            <!-- Properties List -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-home"></i> My Properties</h5>
+                    <a href="{% url 'property_list' %}" class="btn btn-sm btn-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    {% if properties %}
+                        <div class="row">
+                            {% for property in properties|slice:":3" %}
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100">
+                                    {% with imgs=property.images.all %}
+                                    {% if imgs|length > 0 %}
+                                        <img src="{{ imgs.0.image_url.url }}" class="card-img-top" alt="{{ property.title }}" style="height:180px;object-fit:cover;">
+                                        <small class="text-muted d-block mt-1">Image URL: {{ imgs.0.image_url.url }}</small>
+                                    {% else %}
+                                        <img src="https://via.placeholder.com/400x180/ecf0f1/2c3e50?text=Property+{{ property.property_id }}" class="card-img-top" alt="{{ property.title }}" style="height:180px;object-fit:cover;">
+                                    {% endif %}
+                                    <div class="card-body">
+                                        <h6 class="card-title">{{ property.title }}</h6>
+                                        <p class="card-text text-muted small">
+                                            <i class="fas fa-map-marker-alt"></i> {{ property.city }}
+                                        </p>
+                                        <div class="property-details mb-2">
+                                            <span class="badge bg-primary me-1">{{ property.bedrooms }}BD</span>
+                                            <span class="badge bg-primary me-1">{{ property.bathrooms }}BA</span>
+                                            <span class="badge bg-{% if property.status == 'available' %}success{% else %}warning{% endif %}">
+                                                {{ property.status|title }}
+                                            </span>
+                                        </div>
+                                        <strong class="text-primary">BDT {{ property.rent_amount }}/month</strong>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endwith %}
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No properties listed yet. <a href="{% url 'add_property' %}">Add your first property</a> to get started.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Pending Bookings (Requiring Action) -->
+            {% if pending_bookings %}
+            <div class="card mb-4" id="pending-bookings-section">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="fas fa-clock"></i> Pending Bookings - Action Required</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Tenant</th>
+                                    <th>Dates</th>
+                                    <th>Amount</th>
+                                    <th>Requested On</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for booking in pending_bookings %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ booking.property.title }}</strong><br>
+                                        <small class="text-muted">{{ booking.property.city }}</small>
+                                    </td>
+                                    <td>
+                                        {{ booking.tenant.user.first_name }} {{ booking.tenant.user.last_name }}<br>
+                                        <small class="text-muted">{{ booking.tenant.user.email }}</small>
+                                    </td>
+                                    <td>{{ booking.start_date }} to {{ booking.end_date }}</td>
+                                    <td>BDT {{ booking.total_amount }}</td>
+                                    <td>{{ booking.created_at|date:"M d, Y" }}</td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <form method="post" action="{% url 'confirm_booking' booking.booking_id %}" class="d-inline">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('Are you sure you want to confirm this booking?')">
+                                                    <i class="fas fa-check"></i> Confirm
+                                                </button>
+                                            </form>
+                                            <form method="post" action="{% url 'cancel_booking' booking.booking_id %}" class="d-inline">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to cancel this booking?')">
+                                                    <i class="fas fa-times"></i> Cancel
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- All Bookings -->
+            <div class="card" id="bookings-section">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-calendar-check"></i> All Bookings</h5>
+                    <span class="badge bg-primary">{{ bookings.count }} total</span>
+                </div>
+                <div class="card-body">
+                    {% if bookings %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Property</th>
+                                        <th>Tenant</th>
+                                        <th>Dates</th>
+                                        <th>Amount</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for booking in bookings|slice:":10" %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ booking.property.title }}</strong><br>
+                                            <small class="text-muted">{{ booking.property.city }}</small>
+                                        </td>
+                                        <td>
+                                            {{ booking.tenant.user.first_name }} {{ booking.tenant.user.last_name }}<br>
+                                            <small class="text-muted">{{ booking.tenant.user.email }}</small>
+                                        </td>
+                                        <td>{{ booking.start_date }} to {{ booking.end_date }}</td>
+                                        <td>BDT {{ booking.total_amount }}</td>
+                                        <td>
+                                            <span class="badge bg-{% if booking.booking_status == 'confirmed' %}success{% elif booking.booking_status == 'pending' %}warning{% else %}danger{% endif %}">
+                                                {{ booking.booking_status|title }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {% if booking.booking_status == 'pending' %}
+                                                <div class="btn-group">
+                                                    <form method="post" action="{% url 'confirm_booking' booking.booking_id %}" class="d-inline">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="btn btn-success btn-sm">
+                                                            <i class="fas fa-check"></i> Confirm
+                                                        </button>
+                                                    </form>
+                                                    <form method="post" action="{% url 'cancel_booking' booking.booking_id %}" class="d-inline">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="btn btn-danger btn-sm">
+                                                            <i class="fas fa-times"></i> Cancel
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            {% elif booking.booking_status == 'confirmed' %}
+                                                <span class="text-success"><i class="fas fa-check-circle"></i> Confirmed</span>
+                                            {% else %}
+                                                <span class="text-muted">No action needed</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No Bookings Yet</h5>
+                            <p class="text-muted">You haven't received any booking requests yet.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for smooth scrolling -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Smooth scrolling for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const targetId = this.getAttribute('href').substring(1);
+            const targetElement = document.getElementById(targetId);
+            if (targetElement) {
+                targetElement.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

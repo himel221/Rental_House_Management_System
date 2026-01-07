@@ -1,0 +1,38 @@
+<!-- make_payment.html এর payment options অংশে যোগ করুন -->
+
+<div class="form-check mb-2">
+    <input class="form-check-input" type="radio" name="paymentType" id="sslcommerz" value="sslcommerz">
+    <label class="form-check-label" for="sslcommerz">
+        <i class="fas fa-globe"></i> SSLCommerz (বাংলাদেশ)
+    </label>
+</div>
+
+<!-- Form এর শেষে JavaScript যোগ করুন -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const sslcommerzRadio = document.getElementById('sslcommerz');
+    const submitBtn = document.querySelector('button[type="submit"]');
+    
+    sslcommerzRadio.addEventListener('change', function() {
+        if (this.checked) {
+            // SSLCommerz payment initiate করুন
+            const bookingId = {{ booking.booking_id }};
+            const amount = document.querySelector('input[name="amount"]').value;
+            
+            // SSLCommerz payment page-এ redirect করুন
+            window.location.href = `/payment/sslcommerz/initiate/${bookingId}/?amount=${amount}`;
+        }
+    });
+    
+    // Prevent form submission when SSLCommerz selected
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        if (sslcommerzRadio.checked) {
+            e.preventDefault();
+            const bookingId = {{ booking.booking_id }};
+            const amount = document.querySelector('input[name="amount"]').value;
+            window.location.href = `/payment/sslcommerz/initiate/${bookingId}/?amount=${amount}`;
+        }
+    });
+});
+</script>

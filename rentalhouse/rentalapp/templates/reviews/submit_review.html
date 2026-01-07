@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+
+{% block title %}Submit Review - RentalSystem{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0"><i class="fas fa-star"></i> Submit Review</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Booking Information -->
+                    <div class="booking-info mb-4 p-3 bg-light rounded">
+                        <h5>{{ booking.property.title }}</h5>
+                        <p class="mb-1">Booking Period: {{ booking.start_date }} to {{ booking.end_date }}</p>
+                        <p class="mb-0">Location: {{ booking.property.city }}, {{ booking.property.state }}</p>
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label class="form-label">Rating *</label>
+                            <div class="rating-input mb-3">
+                                <div class="d-flex justify-content-center">
+                                    {% for i in "12345" %}
+                                    <div class="rating-star me-2">
+                                        <input type="radio" id="star{{ forloop.counter }}" name="rating" value="{{ forloop.counter }}" class="d-none" 
+                                               {% if forloop.counter == 5 %}checked{% endif %}>
+                                        <label for="star{{ forloop.counter }}" class="star-label">
+                                            <i class="fas fa-star fa-2x"></i>
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                <div class="text-center mt-2">
+                                    <small class="text-muted">Click on stars to rate</small>
+                                </div>
+                            </div>
+                            {{ form.rating }}
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">Review *</label>
+                            {{ form.review_text }}
+                            <small class="text-muted">Share your experience with this property</small>
+                        </div>
+
+                        <div class="review-guidelines mb-4 p-3 bg-light rounded">
+                            <h6>Review Guidelines:</h6>
+                            <ul class="small mb-0">
+                                <li>Be honest and specific about your experience</li>
+                                <li>Focus on the property and its amenities</li>
+                                <li>Mention both positives and areas for improvement</li>
+                                <li>Avoid personal information about the owner</li>
+                            </ul>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-info btn-lg">
+                                <i class="fas fa-star"></i> Submit Review
+                            </button>
+                            <a href="{% url 'tenant_dashboard' %}" class="btn btn-secondary btn-lg">
+                                <i class="fas fa-arrow-left"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.rating-star .star-label {
+    cursor: pointer;
+    color: #ddd;
+    transition: color 0.2s;
+}
+
+.rating-star input:checked ~ .star-label,
+.rating-star:hover .star-label {
+    color: #ffc107;
+}
+
+.rating-star:hover ~ .rating-star .star-label {
+    color: #ddd;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const stars = document.querySelectorAll('.rating-star input');
+    const ratingInput = document.getElementById('id_rating');
+    
+    stars.forEach(star => {
+        star.addEventListener('change', function() {
+            ratingInput.value = this.value;
+            
+            // Update star colors
+            stars.forEach(s => {
+                const label = s.nextElementSibling;
+                if (s.value <= this.value) {
+                    label.style.color = '#ffc107';
+                } else {
+                    label.style.color = '#ddd';
+                }
+            });
+        });
+    });
+});
+</script>
+{% endblock %}

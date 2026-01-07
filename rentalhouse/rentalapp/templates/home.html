@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section bg-primary text-white py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-4">Find Your Perfect Home</h1>
+                <p class="lead mb-4">Discover the best rental properties in your area. Whether you're looking for an apartment, house, or villa, we have the perfect place for you.</p>
+                <div class="d-flex gap-3">
+                    <a href="{% url 'property_search' %}" class="btn btn-light btn-lg">Browse Properties</a>
+                    {% if not user.is_authenticated %}
+                        <a href="{% url 'user_register' %}" class="btn btn-outline-light btn-lg">Get Started</a>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <img src="https://houseplans.co/media/cached_assets/images/house_plan_images/1168ESrd_900x600.jpg" alt="Rental Homes" height="500" width="500" class="img-fluid rounded">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Properties -->
+<section class="py-5">
+    <div class="container">
+        <h2 class="text-center mb-5">Featured Properties</h2>
+        <div class="row">
+            {% for property in featured_properties %}
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card property-card h-100">
+                    {% with imgs=property.images.all %}
+                        {% if imgs|length > 0 %}
+                            <img src="{{ imgs.0.image_url.url }}" class="card-img-top" alt="{{ property.title }}">
+                        {% else %}
+                            <img src="https://via.placeholder.com/400x300/ecf0f1/2c3e50?text=Property+{{ property.property_id }}" class="card-img-top" alt="{{ property.title }}">
+                        {% endif %}
+                    {% endwith %}
+                    <div class="card-body">
+                        <h5 class="card-title">{{ property.title }}</h5>
+                        <p class="card-text text-muted">
+                            <i class="fas fa-map-marker-alt"></i> {{ property.city }}, {{ property.state }}
+                        </p>
+                        <div class="property-details mb-3">
+                            <span class="badge bg-primary me-2">
+                                <i class="fas fa-bed"></i> {{ property.bedrooms }} Bed
+                            </span>
+                            <span class="badge bg-primary me-2">
+                                <i class="fas fa-bath"></i> {{ property.bathrooms }} Bath
+                            </span>
+                            {% if property.area_sqft %}
+                            <span class="badge bg-primary">
+                                <i class="fas fa-ruler-combined"></i> {{ property.area_sqft }} sqft
+                            </span>
+                            {% endif %}
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <strong class="text-primary">BDT {{ property.rent_amount }}/month</strong>
+                            <a href="{% url 'property_detail' property.property_id %}" class="btn btn-primary btn-sm">View Details</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center">
+                <p class="text-muted">No featured properties available at the moment.</p>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="text-center mt-4">
+            <a href="{% url 'property_search' %}" class="btn btn-primary btn-lg">View All Properties</a>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-lg-4 mb-4">
+                <div class="feature-icon mb-3">
+                    <i class="fas fa-home fa-3x text-primary"></i>
+                </div>
+                <h4>Wide Selection</h4>
+                <p class="text-muted">Choose from hundreds of verified properties across different locations and budgets.</p>
+            </div>
+            <div class="col-lg-4 mb-4">
+                <div class="feature-icon mb-3">
+                    <i class="fas fa-shield-alt fa-3x text-primary"></i>
+                </div>
+                <h4>Secure Payments</h4>
+                <p class="text-muted">Safe and secure online payment system with multiple payment options.</p>
+            </div>
+            <div class="col-lg-4 mb-4">
+                <div class="feature-icon mb-3">
+                    <i class="fas fa-headset fa-3x text-primary"></i>
+                </div>
+                <h4>24/7 Support</h4>
+                <p class="text-muted">Get help whenever you need it with our round-the-clock customer support.</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

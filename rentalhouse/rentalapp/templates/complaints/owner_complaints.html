@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block title %}Owner Complaints - RentalSystem{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-md-3">
+            <div class="sidebar rounded p-3">
+                <h5 class="text-center mb-3">Tenants with Complaints</h5>
+                <ul class="list-group">
+                    <li class="list-group-item {% if not selected_tenant %}active{% endif %}">
+                        <a href="{% url 'owner_complaints' %}" class="stretched-link text-decoration-none {% if not selected_tenant %}text-white{% endif %}">All Tenants</a>
+                    </li>
+                    {% for tenant in tenants_with_complaints %}
+                        <li class="list-group-item {% if selected_tenant and selected_tenant.tenant_id == tenant.tenant_id %}active{% endif %}">
+                            <a href="{% url 'owner_complaints' %}?tenant_id={{ tenant.tenant_id }}" class="text-decoration-none {% if selected_tenant and selected_tenant.tenant_id == tenant.tenant_id %}text-white{% endif %}">
+                                {{ tenant.user.first_name }} {{ tenant.user.last_name }}
+                            </a>
+                        </li>
+                    {% empty %}
+                        <li class="list-group-item text-muted">No tenant complaints yet.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-md-9">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3>Complaints{% if selected_tenant %} - {{ selected_tenant.user.get_full_name }}{% endif %}</h3>
+                <a href="{% url 'owner_dashboard' %}" class="btn btn-secondary">Back to Dashboard</a>
+            </div>
+
+            {% if complaints %}
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Property</th>
+                                        <th>Type</th>
+                                        <th>Title</th>
+                                        <th>Submitted</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for c in complaints %}
+                                    <tr>
+                                        <td>#{{ c.complaint_id }}</td>
+                                        <td>{{ c.property.title }}</td>
+                                        <td>{{ c.get_type_display }}</td>
+                                        <td>{{ c.title }}</td>
+                                        <td>{{ c.created_at|date:"M d, Y" }}</td>
+                                        <td>
+                                            <span class="badge bg-{% if c.status == 'open' %}warning{% elif c.status == 'in-progress' %}primary{% else %}success{% endif %}">
+                                                {{ c.status|title }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <!-- Inline action form -->
+                                            <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#action-{{ c.complaint_id }}">
+                                                Take Action
+                                            </button>
+                                            <div class="collapse mt-2" id="action-{{ c.complaint_id }}">
+                                                <form method="post" class="p-2 border rounded bg-light">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="complaint_id" value="{{ c.complaint_id }}">
+
+                                                    <div class="mb-2">
+                                                        <label class="form-label">Status</label>
+                                                        <select name="status" class="form-select">
+                                                            <option value="open" {% if c.status == 'open' %}selected{% endif %}>Open</option>
+                                                            <option value="in-progress" {% if c.status == 'in-progress' %}selected{% endif %}>In Progress</option>
+                                                            <option value="resolved" {% if c.status == 'resolved' %}selected{% endif %}>Resolved</option>
+                                                        </select>
+                                                    </div>
+
+                                                    <div class="mb-2">
+                                                        <label class="form-label">Resolution Notes</label>
+                                                        <textarea name="resolution_notes" class="form-control" rows="3">{{ c.resolution_notes }}</textarea>
+                                                    </div>
+
+                                                    <div class="d-flex gap-2">
+                                                        <button type="submit" class="btn btn-success btn-sm">Save</button>
+                                                        <a href="#" class="btn btn-sm btn-secondary" data-bs-toggle="collapse" data-bs-target="#action-{{ c.complaint_id }}">Cancel</a>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr class="table-row-full">
+                                        <td colspan="7">
+                                            <strong>Description:</strong>
+                                            <p class="mb-0">{{ c.description }}</p>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="alert alert-info">No complaints found.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

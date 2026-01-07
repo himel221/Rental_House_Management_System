@@ -1,0 +1,422 @@
+{% extends 'base.html' %}
+
+{% block title %}Tenant Dashboard - RentalSystem{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            <div class="sidebar rounded p-3">
+                <h5 class="text-center mb-4">Tenant Dashboard</h5>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{% url 'tenant_dashboard' %}">
+                            <i class="fas fa-tachometer-alt"></i> Overview
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'property_search' %}">
+                            <i class="fas fa-search"></i> Find Properties
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#bookings-section">
+                            <i class="fas fa-calendar-check"></i> My Bookings
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#payments-section">
+                            <i class="fas fa-credit-card"></i> Payments
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'submit_complaint' %}">
+                            <i class="fas fa-exclamation-circle"></i> Submit Complaint
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'inbox' %}">
+                            <i class="fas fa-inbox"></i> Messages
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-9">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Welcome, {{ tenant.user.first_name }}!</h2>
+                <a href="{% url 'property_search' %}" class="btn btn-primary">
+                    <i class="fas fa-search"></i> Find Properties
+                </a>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card stat-card text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4>{{ bookings.count }}</h4>
+                                    <p>Total Bookings</p>
+                                </div>
+                                <i class="fas fa-calendar-check fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stat-card text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4>{{ payments.count }}</h4>
+                                    <p>Payments Made</p>
+                                </div>
+                                <i class="fas fa-credit-card fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stat-card text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4>{{ complaints.count }}</h4>
+                                    <p>Complaints</p>
+                                </div>
+                                <i class="fas fa-exclamation-circle fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stat-card text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4>BDT {{ total_paid|default:0 }}</h4>
+                                    <p>Total Paid</p>
+                                </div>
+                                <i class="fas fa-dollar-sign fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- My Bookings Section -->
+            <div class="card mb-4" id="bookings-section">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-calendar-check"></i> My Bookings</h5>
+                    <a href="{% url 'property_search' %}" class="btn btn-sm btn-primary">Book New Property</a>
+                </div>
+                <div class="card-body">
+                    {% if bookings %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Property</th>
+                                        <th>Start Date</th>
+                                        <th>End Date</th>
+                                        <th>Amount</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for booking in bookings %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ booking.property.title }}</strong><br>
+                                            <small class="text-muted">{{ booking.property.city }}</small>
+                                        </td>
+                                        <td>{{ booking.start_date }}</td>
+                                        <td>{{ booking.end_date }}</td>
+                                        <td>BDT {{ booking.total_amount }}</td>
+                                        <td>
+                                            <span class="badge bg-{% if booking.booking_status == 'confirmed' %}success{% elif booking.booking_status == 'pending' %}warning{% else %}danger{% endif %}">
+                                                {{ booking.booking_status|title }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {% if booking.booking_status == 'confirmed' and booking.payment_due %}
+                                                 
+                                                    <a href="{% url 'initiate_sslcommerz_payment' booking.booking_id %}" 
+           class="btn btn-success btn-sm">
+            <i class="fas fa-globe"></i> Pay with SSLCommerz
+        </a>
+                                                {% elif booking.booking_status == 'confirmed' and not booking.payment_due %}
+                                                    {% if booking.fully_paid %}
+                                                        <span class="badge bg-success">Completed</span>
+                                                    {% else %}
+                                                        <span class="text-muted">Next due: {{ booking.next_payment_due|date:"M d, Y" }}</span>
+                                                    {% endif %}
+                                                {% elif booking.booking_status == 'pending' %}
+                                                <form method="post" action="{% url 'cancel_booking' booking.booking_id %}" class="d-inline">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to cancel this booking?')">
+                                                        <i class="fas fa-times"></i> Cancel
+                                                    </button>
+                                                </form>
+                                            {% else %}
+                                                <span class="text-muted">Waiting for confirmation</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No Bookings Yet</h5>
+                            <p class="text-muted">You haven't made any bookings yet.</p>
+                            <a href="{% url 'property_search' %}" class="btn btn-primary">
+                                <i class="fas fa-search"></i> Find Properties to Book
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Payments Section -->
+            <div class="card" id="payments-section">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-credit-card"></i> Payment History</h5>
+                    {% if bookings.exists %}
+                    <small class="text-muted">Go to bookings above to make payments</small>
+                    {% endif %}
+                </div>
+                <!-- Send Payment Box: quick tenant payment form -->
+                
+                <div class="card-body">
+                    {% if payments %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Payment ID</th>
+                                        <th>Booking</th>
+                                        <th>Amount</th>
+                                        <th>Date</th>
+                                        <th>Method</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for payment in payments %}
+                                    <tr>
+                                        <td>#{{ payment.payment_id }}</td>
+                                        <td>
+                                            <strong>{{ payment.booking.property.title }}</strong><br>
+                                            <small class="text-muted">Booking #{{ payment.booking.booking_id }}</small>
+                                        </td>
+                                        <td>BDT {{ payment.amount }}</td>
+                                        <td>{{ payment.payment_date|default:"Not paid yet" }}</td>
+                                        <td>
+                                            {% if payment.payment_method %}
+                                                <span class="badge bg-info">{{ payment.payment_method|title }}</span>
+                                            {% else %}
+                                                <span class="text-muted">Not specified</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{% if payment.payment_status == 'completed' %}success{% elif payment.payment_status == 'pending' %}warning{% else %}danger{% endif %}">
+                                                {{ payment.payment_status|title }}
+                                            </span>
+                                            {% if payment.payment_status == 'pending' and payment.due_date <= today %}
+                                                <div class="mt-2">
+                                                    <a href="{% url 'initiate_sslcommerz_payment' payment.booking.booking_id %}" class="btn btn-primary btn-sm">
+                                                        <i class="fas fa-credit-card"></i> Pay with SSLCommerz
+                                                    </a>
+                                                </div>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-credit-card fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No Payments Yet</h5>
+                            <p class="text-muted">You haven't made any payments yet.</p>
+                            {% if bookings.exists %}
+                                <p class="text-muted">Go to "My Bookings" section above to make your first payment.</p>
+                                <a href="#bookings-section" class="btn btn-primary">
+                                    <i class="fas fa-arrow-up"></i> Go to Bookings
+                                </a>
+                            {% else %}
+                                <a href="{% url 'property_search' %}" class="btn btn-primary">
+                                    <i class="fas fa-search"></i> Find Properties to Book
+                                </a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Complaints Section -->
+            <div class="card mt-4" id="complaints-section">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-exclamation-circle"></i> Complaints</h5>
+                    <small class="text-muted">You can see owner responses here</small>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h6>Open</h6>
+                            <ul class="list-group">
+                                {% for c in complaints_open %}
+                                    <li class="list-group-item">
+                                        <strong>{{ c.title }}</strong>
+                                        <div class="small text-muted">{{ c.property.title }} — {{ c.created_at|date:"M d, Y" }}</div>
+                                        <div class="mt-1">{{ c.description|truncatechars:120 }}</div>
+                                    </li>
+                                {% empty %}
+                                    <li class="list-group-item text-muted">No open complaints.</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
+                            <h6>In Progress</h6>
+                            <ul class="list-group">
+                                {% for c in complaints_in_progress %}
+                                    <li class="list-group-item">
+                                        <strong>{{ c.title }}</strong>
+                                        <div class="small text-muted">{{ c.property.title }} — {{ c.created_at|date:"M d, Y" }}</div>
+                                        <div class="mt-1">{{ c.description|truncatechars:120 }}</div>
+                                        {% if c.resolution_notes %}
+                                            <div class="mt-2 alert alert-info p-2">Owner: {{ c.resolution_notes }}</div>
+                                        {% endif %}
+                                    </li>
+                                {% empty %}
+                                    <li class="list-group-item text-muted">No in-progress complaints.</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
+                            <h6>Resolved</h6>
+                            <ul class="list-group">
+                                {% for c in complaints_resolved %}
+                                    <li class="list-group-item">
+                                        <strong>{{ c.title }}</strong>
+                                        <div class="small text-muted">{{ c.property.title }} — Resolved {{ c.resolved_at|date:"M d, Y" }}</div>
+                                        <div class="mt-1">{{ c.description|truncatechars:120 }}</div>
+                                        {% if c.resolution_notes %}
+                                            <div class="mt-2 alert alert-success p-2">Resolution: {{ c.resolution_notes }}</div>
+                                        {% endif %}
+                                    </li>
+                                {% empty %}
+                                    <li class="list-group-item text-muted">No resolved complaints.</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for smooth scrolling -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Smooth scrolling for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const targetId = this.getAttribute('href').substring(1);
+            const targetElement = document.getElementById(targetId);
+            if (targetElement) {
+                targetElement.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Quick Send Payment: build make_payment URL and submit
+    const quickForm = document.getElementById('quick-send-payment');
+    const bookingSelect = document.getElementById('q_booking');
+    const amountInput = document.getElementById('q_amount');
+    const methodInput = document.getElementById('q_method');
+
+    // base URL with placeholder 0 -> /payment/0/
+    const baseUrl = "";
+
+    // auto-fill amount when booking selected
+    bookingSelect.addEventListener('change', function() {
+        const opt = this.options[this.selectedIndex];
+        if (opt && opt.dataset && opt.dataset.amount) {
+            amountInput.value = opt.dataset.amount;
+        }
+    });
+
+    quickForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const bookingId = bookingSelect.value;
+        if (!bookingId) {
+            alert('Please select a booking to pay for.');
+            return;
+        }
+        // build action URL
+        const actionUrl = baseUrl.replace('/0/', '/' + bookingId + '/');
+
+        // create a temporary form to POST to the make_payment URL (keeps page structure)
+        const tempForm = document.createElement('form');
+        tempForm.method = 'post';
+        tempForm.action = actionUrl;
+        // csrf
+        const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrfmiddlewaretoken';
+        csrfInput.value = csrfToken;
+        tempForm.appendChild(csrfInput);
+
+        // amount
+        const a = document.createElement('input');
+        a.type = 'hidden';
+        a.name = 'amount';
+        a.value = amountInput.value || '';
+        tempForm.appendChild(a);
+
+        // payment_method
+        const m = document.createElement('input');
+        m.type = 'hidden';
+        m.name = 'payment_method';
+        m.value = methodInput.value;
+        tempForm.appendChild(m);
+
+        document.body.appendChild(tempForm);
+        tempForm.submit();
+    });
+});
+</script>
+
+<style>
+.sidebar .nav-link.active {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: white;
+    border-left: 3px solid #3498db;
+}
+
+.card[id] {
+    scroll-margin-top: 20px;
+}
+</style>
+{% endblock %}

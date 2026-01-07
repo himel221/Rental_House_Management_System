@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+
+{% block title %}Book Property - RentalSystem{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-calendar-check"></i> Book Property</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Property Summary -->
+                    <div class="property-summary mb-4 p-3 bg-light rounded">
+                        <h5>{{ property.title }}</h5>
+                        <p class="mb-1"><i class="fas fa-map-marker-alt"></i> {{ property.city }}, {{ property.state }}</p>
+                        <p class="mb-1"><strong>Rent: BDT {{ property.rent_amount }}/month</strong></p>
+                        <p class="mb-0">Security Deposit: BDT {{ property.security_deposit|default:property.rent_amount }}</p>
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Start Date *</label>
+                                {{ form.start_date }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">End Date *</label>
+                                {{ form.end_date }}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                    <label class="form-label">Total Amount</label>
+                                    <input type="text" id="calculated-amount" class="form-control" value="BDT 0.00" disabled>
+                                    <input type="hidden" id="calculated-months" name="calculated_months" value="0">
+                                    <input type="hidden" id="calculated-days" name="calculated_days" value="0">
+                                </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Special Requests</label>
+                            {{ form.special_requests }}
+                        </div>
+
+                        <!-- Booking Summary -->
+                        <div class="booking-summary p-3 bg-light rounded mb-4">
+                            <h6>Booking Summary</h6>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Monthly Rent:</span>
+                                <span>BDT {{ property.rent_amount }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Rental Duration:</span>
+                                <span id="summary-duration">0 days</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Security Deposit:</span>
+                                <span>BDT {{ property.security_deposit|default:property.rent_amount }}</span>
+                            </div>
+                            <hr>
+                            <div class="d-flex justify-content-between">
+                                <strong>Total Rent (all months):</strong>
+                                <strong id="summary-total">BDT 0.00</strong>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-calendar-check"></i> Confirm Booking
+                            </button>
+                            <a href="{% url 'property_detail' property.property_id %}" class="btn btn-secondary btn-lg">
+                                <i class="fas fa-arrow-left"></i> Back to Property
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+                    <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const startInput = document.querySelector('input[name="start_date"]');
+                    const endInput = document.querySelector('input[name="end_date"]');
+                    const calcAmount = document.getElementById('calculated-amount');
+                    const calcMonths = document.getElementById('calculated-months');
+                    const calcDays = document.getElementById('calculated-days');
+                    const summaryDuration = document.getElementById('summary-duration');
+                    const summaryTotal = document.getElementById('summary-total');
+                    const rent = parseFloat('{{ property.rent_amount }}');
+
+                    function updateCalculation() {
+                        const start = startInput && startInput.value ? new Date(startInput.value) : null;
+                        const end = endInput && endInput.value ? new Date(endInput.value) : null;
+                        const msPerDay = 1000 * 60 * 60 * 24;
+
+                        if (!start || !end || end <= start) {
+                            // No valid range yet — show zeros
+                            if (calcAmount) calcAmount.value = 'BDT 0.00';
+                            if (calcMonths) calcMonths.value = '0';
+                            if (calcDays) calcDays.value = '0';
+                            summaryDuration.textContent = '0 days';
+                            summaryTotal.textContent = 'BDT 0.00';
+                            return;
+                        }
+
+                        const diffDays = Math.ceil((end - start) / msPerDay);
+
+                        if (diffDays < 30) {
+                            const perDay = rent / 30.0;
+                            const total = (perDay * diffDays).toFixed(2);
+                            if (calcAmount) calcAmount.value = 'BDT ' + total;
+                            if (calcDays) calcDays.value = diffDays;
+                            if (calcMonths) calcMonths.value = '0';
+                            summaryDuration.textContent = diffDays + ' day' + (diffDays > 1 ? 's' : '');
+                            summaryTotal.textContent = 'BDT ' + total;
+                        } else {
+                            // calendar-aware years/months/days calculation
+                            let y = end.getFullYear() - start.getFullYear();
+                            let m = end.getMonth() - start.getMonth();
+                            let d = end.getDate() - start.getDate();
+
+                            if (d < 0) {
+                                // borrow days from previous month of end
+                                const daysInPrevMonth = new Date(end.getFullYear(), end.getMonth(), 0).getDate();
+                                d += daysInPrevMonth;
+                                m -= 1;
+                            }
+
+                            if (m < 0) {
+                                m += 12;
+                                y -= 1;
+                            }
+
+                            let totalMonths = y * 12 + m;
+                            if (totalMonths < 1) totalMonths = 1;
+
+                            const perDay = rent / 30.0;
+                            const total = (rent * totalMonths + perDay * d).toFixed(2);
+
+                            if (calcAmount) calcAmount.value = 'BDT ' + total;
+                            if (calcDays) calcDays.value = diffDays;
+                            if (calcMonths) calcMonths.value = totalMonths;
+
+                            // build readable duration string
+                            let parts = [];
+                            if (y > 0) parts.push(y + ' year' + (y > 1 ? 's' : ''));
+                            if (m > 0) parts.push(m + ' month' + (m > 1 ? 's' : ''));
+                            if (d > 0) parts.push(d + ' day' + (d > 1 ? 's' : ''));
+                            if (parts.length === 0) parts.push('0 days');
+
+                            summaryDuration.textContent = parts.join(' ');
+                            summaryTotal.textContent = 'BDT ' + total;
+                        }
+                    }
+
+                    if (startInput) startInput.addEventListener('change', updateCalculation);
+                    if (endInput) endInput.addEventListener('change', updateCalculation);
+
+                    // Start with zeros until user selects dates
+                    updateCalculation();
+                });
+                </script>
+{% endblock %}

@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard - RentalSystem{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            <div class="sidebar rounded p-3">
+                <h5 class="text-center mb-4">Admin Dashboard</h5>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{% url 'admin_dashboard' %}">
+                            <i class="fas fa-tachometer-alt"></i> Overview
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/">
+                            <i class="fas fa-cog"></i> Admin Panel
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#users-section">
+                            <i class="fas fa-users"></i> Users
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#properties-section">
+                            <i class="fas fa-home"></i> Properties
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#bookings-section">
+                            <i class="fas fa-calendar-check"></i> Bookings
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-9">
+            <h2 class="mb-4">Admin Dashboard</h2>
+
+            <!-- Stats Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card stat-card text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4>{{ total_users }}</h4>
+                                    <p>Total Users</p>
+                                </div>
+                                <i class="fas fa-users fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stat-card text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4>{{ total_properties }}</h4>
+                                    <p>Properties</p>
+                                </div>
+                                <i class="fas fa-home fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stat-card text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4>{{ total_bookings }}</h4>
+                                    <p>Bookings</p>
+                                </div>
+                                <i class="fas fa-calendar-check fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Users -->
+            <div class="card mb-4" id="users-section">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-users"></i> Recent Users</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Type</th>
+                                    <th>Joined</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in recent_users %}
+                                <tr>
+                                    <td>{{ user.first_name }} {{ user.last_name }}</td>
+                                    <td>{{ user.email }}</td>
+                                    <td>
+                                        <span class="badge bg-info">{{ user.user_type|title }}</span>
+                                    </td>
+                                    <td>{{ user.created_at|date:"M d, Y" }}</td>
+                                    <td>
+                                        <span class="badge bg-{% if user.status == 'active' %}success{% else %}warning{% endif %}">
+                                            {{ user.status|title }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Bookings -->
+            <div class="card mb-4" id="bookings-section">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-calendar-check"></i> Recent Bookings</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Booking ID</th>
+                                    <th>Property</th>
+                                    <th>Tenant</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for booking in recent_bookings %}
+                                <tr>
+                                    <td>#{{ booking.booking_id }}</td>
+                                    <td>{{ booking.property.title }}</td>
+                                    <td>{{ booking.tenant.user.first_name }}</td>
+                                    <td>BDT {{ booking.total_amount }}</td>
+                                    <td>
+                                        <span class="badge bg-{% if booking.booking_status == 'confirmed' %}success{% elif booking.booking_status == 'pending' %}warning{% else %}danger{% endif %}">
+                                            {{ booking.booking_status|title }}
+                                        </span>
+                                    </td>
+                                    <td>{{ booking.created_at|date:"M d, Y" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Properties -->
+            <div class="card" id="properties-section">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-home"></i> Recent Properties</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Property ID</th>
+                                    <th>Title</th>
+                                    <th>Owner</th>
+                                    <th>City</th>
+                                    <th>Rent (BDT)</th>
+                                    <th>Status</th>
+                                    <th>Date Added</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for property in recent_properties %}
+                                <tr>
+                                    <td>#{{ property.property_id }}</td>
+                                    <td>{{ property.title }}</td>
+                                    <td>{{ property.owner.user.first_name }} {{ property.owner.user.last_name }}</td>
+                                    <td>{{ property.city }}</td>
+                                    <td>{{ property.rent_amount }}</td>
+                                    <td>
+                                        <span class="badge bg-{% if property.status == 'available' %}success{% elif property.status == 'occupied' %}warning{% else %}danger{% endif %}">
+                                            {{ property.status|title }}
+                                        </span>
+                                    </td>
+                                    <td>{{ property.created_at|date:"M d, Y" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

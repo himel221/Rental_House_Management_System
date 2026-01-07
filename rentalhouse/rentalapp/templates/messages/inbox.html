@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+
+{% block title %}Inbox - RentalSystem{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Messages</h2>
+        <a href="{% url 'send_message' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> New Message
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <!-- Message Folders -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Folders</h6>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="#inbox" class="list-group-item list-group-item-action active">
+                        <i class="fas fa-inbox"></i> Inbox
+                        <span class="badge bg-primary float-end">{{ received_messages.count }}</span>
+                    </a>
+                    <a href="#sent" class="list-group-item list-group-item-action">
+                        <i class="fas fa-paper-plane"></i> Sent
+                        <span class="badge bg-secondary float-end">{{ sent_messages.count }}</span>
+                    </a>
+                    
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <!-- Received Messages -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-inbox"></i> Received Messages</h5>
+                    <span class="badge bg-primary">{{ received_messages.count }}</span>
+                </div>
+                <div class="card-body p-0">
+                    {% if received_messages %}
+                        <div class="list-group list-group-flush">
+                            {% for message in received_messages %}
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1">
+                                            {{ message.sender.first_name }} {{ message.sender.last_name }}
+                                        </h6>
+                                        <p class="mb-1 text-muted">{{ message.message_text|truncatewords:20 }}</p>
+                                        <small class="text-muted">
+                                            <i class="fas fa-clock"></i> {{ message.sent_at|timesince }} ago
+                                            {% if message.property %}
+                                            • Regarding: {{ message.property.title }}
+                                            {% endif %}
+                                        </small>
+                                    </div>
+                                    
+                                        <div class="dropdown">
+    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+        <i class="fas fa-ellipsis-v"></i>
+   </button>
+    <ul class="dropdown-menu">
+        <li>
+            <a class="dropdown-item" href="{% url 'send_message' %}?reply_to={{ message.message_id }}">
+                <i class="fas fa-reply"></i> Reply
+            </a>
+        </li>
+         
+        <li><hr class="dropdown-divider"></li>
+        <li>
+            <form method="post" action="{% url 'delete_message' message.message_id %}" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="dropdown-item text-danger" 
+                        onclick="return confirm('Are you sure you want to delete this message?')">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+            </form>
+        </li>
+    </ul>
+</div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No Messages</h5>
+                            <p class="text-muted">You haven't received any messages yet.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Sent Messages -->
+            <div class="card mt-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-paper-plane"></i> Sent Messages</h5>
+                    <span class="badge bg-secondary">{{ sent_messages.count }}</span>
+                </div>
+                
+                <div class="card-body p-0">
+                    {% if sent_messages %}
+                        <div class="list-group list-group-flush">
+                            {% for message in sent_messages %}
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1">
+                                            To: {{ message.receiver.first_name }} {{ message.receiver.last_name }}
+                                        </h6>
+                                        <p class="mb-1 text-muted">{{ message.message_text|truncatewords:20 }}</p>
+                                        <small class="text-muted">
+                                            <i class="fas fa-clock"></i> {{ message.sent_at|timesince }} ago
+                                            {% if message.property %}
+                                            • Regarding: {{ message.property.title }}
+                                            {% endif %}
+                                        </small>
+                                    </div>
+
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-paper-plane fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No Sent Messages</h5>
+                            <p class="text-muted">You haven't sent any messages yet.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}My Properties - RentalSystem{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>My Properties</h2>
+        <a href="{% url 'add_property' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add New Property
+        </a>
+    </div>
+
+    {% if properties %}
+    <div class="row">
+        {% for property in properties %}
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card property-card h-100">
+                    {% with property.images.first as first_image %}
+                    {% if first_image %}
+                        <img src="{{ first_image.image_url.url }}" 
+                             class="card-img-top" 
+                             alt="{{ property.title }}"
+                             style="height: 200px; object-fit: cover;">
+                    {% else %}
+                        <img src="/static/images/default-property.jpg" 
+                             class="card-img-top" 
+                             alt="No image available"
+                             style="height: 200px; object-fit: cover;">
+                    {% endif %}
+                {% endwith %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ property.title }}</h5>
+                    <p class="card-text text-muted">
+                        <i class="fas fa-map-marker-alt"></i> {{ property.city }}, {{ property.state }}
+                    </p>
+                    <div class="property-details mb-3">
+                        <span class="badge bg-primary me-2">{{ property.bedrooms }}BD</span>
+                        <span class="badge bg-primary me-2">{{ property.bathrooms }}BA</span>
+                        <span class="badge bg-{% if property.status == 'available' %}success{% else %}warning{% endif %}">
+                            {{ property.status|title }}
+                        </span>
+                    </div>
+                    <p class="card-text">{{ property.description|truncatewords:15 }}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <strong class="text-primary">BDT {{ property.rent_amount }}/month</strong>
+                        <div class="btn-group">
+                            <a href="{% url 'property_detail' property.property_id %}" class="btn btn-sm btn-outline-primary">View</a>
+                            <a href="{% url 'edit_property' property.property_id %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                            <a href="{% url 'delete_property' property.property_id %}" class="btn btn-sm btn-outline-danger">Delete</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="card text-center">
+        <div class="card-body py-5">
+            <i class="fas fa-home fa-4x text-muted mb-3"></i>
+            <h4 class="text-muted">No Properties Listed</h4>
+            <p class="text-muted">You haven't added any properties yet.</p>
+            <a href="{% url 'add_property' %}" class="btn btn-primary btn-lg">
+                <i class="fas fa-plus"></i> Add Your First Property
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
