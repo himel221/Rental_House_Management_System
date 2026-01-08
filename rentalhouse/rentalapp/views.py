@@ -8,6 +8,8 @@ from django.db.models import Q, Sum
 from django.utils import timezone
 from .form import *
 from .models import *
+from django.core.mail import send_mail
+from django.conf import settings
 import csv
 from django.http import HttpResponse
 try:
@@ -34,6 +36,18 @@ def create_notification(user, notification_type, title, message_text, related_en
         )
     except Exception as e:
         print(f"Error creating notification: {str(e)}")
+
+    # Send an email to the user for every notification (if user has email)
+    try:
+        user_email = getattr(user, 'email', None)
+        if user_email:
+            subject = title or 'Notification'
+            message = message_text or ''
+            from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@example.com')
+            # send_mail will use EMAIL_BACKEND from settings; fail silently in production
+            send_mail(subject, message, from_email, [user_email], fail_silently=True)
+    except Exception as e:
+        print(f"Error sending notification email: {e}")
 
 def home(request):
     featured_properties = Properties.objects.filter(status='available')[:6]
@@ -556,7 +570,7 @@ def confirm_booking(request, booking_id):
                         amount = float(booking.property.rent_amount)
 
                     due_date = booking.start_date if booking.start_date >= today else today
-                    Payments.objects.create(
+                    payment = Payments.objects.create(
                         booking=booking,
                         tenant=booking.tenant,
                         owner=booking.property.owner,
@@ -564,6 +578,19 @@ def confirm_booking(request, booking_id):
                         due_date=due_date,
                         payment_status='pending'
                     )
+                    # Notify tenant about the pending payment (tenant only)
+                    try:
+                        if payment.tenant and payment.tenant.user:
+                            create_notification(
+                                user=payment.tenant.user,
+                                notification_type='email',
+                                title='Payment Due',
+                                message_text=f'Your payment of BDT {payment.amount} is due on {payment.due_date.strftime("%b %d, %Y")}.',
+                                related_entity_type='payment',
+                                related_entity_id=payment.payment_id
+                            )
+                    except Exception:
+                        pass
             except Exception:
                 pass
             
@@ -961,7 +988,7 @@ def confirm_payment(request, payment_id):
                     # avoid duplicate pending for same due_date
                     exists = Payments.objects.filter(booking=booking, due_date=next_due, payment_status='pending').exists()
                     if not exists:
-                        Payments.objects.create(
+                        created_payment = Payments.objects.create(
                             booking=booking,
                             tenant=booking.tenant,
                             owner=booking.property.owner,
@@ -970,6 +997,19 @@ def confirm_payment(request, payment_id):
                             payment_status='pending'
                         )
                         created_next = True
+                        # Notify tenant about the newly created pending payment (tenant only)
+                        try:
+                            if created_payment.tenant and created_payment.tenant.user:
+                                create_notification(
+                                    user=created_payment.tenant.user,
+                                    notification_type='email',
+                                    title='Payment Due',
+                                    message_text=f'Your payment of BDT {created_payment.amount} is due on {created_payment.due_date.strftime("%b %d, %Y")}.',
+                                    related_entity_type='payment',
+                                    related_entity_id=created_payment.payment_id
+                                )
+                        except Exception:
+                            pass
         except Exception:
             created_next = False
 
@@ -1292,6 +1332,19 @@ def initiate_sslcommerz_payment(request, booking_id):
             transaction_id=tran_id,
             due_date=(now().date())
         )
+        # Notify tenant about the pending payment created for gateway transaction
+        try:
+            if payment.tenant and payment.tenant.user:
+                create_notification(
+                    user=payment.tenant.user,
+                    notification_type='email',
+                    title='Payment Created',
+                    message_text=f'A payment of BDT {payment.amount} has been created and is pending. Due: {payment.due_date.strftime("%b %d, %Y")}.',
+                    related_entity_type='payment',
+                    related_entity_id=payment.payment_id
+                )
+        except Exception:
+            pass
 
     # Save session info
     request.session['payment_session_key'] = session_key

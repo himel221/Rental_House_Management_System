@@ -241,3 +241,28 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 CSRF_COOKIE_SECURE = False
 CSRF_COOKIE_HTTPONLY = False
+
+# Email configuration
+# For development DEBUG=True uses console backend. Configure real SMTP in production.
+# settings.py
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'hmdhimel1234@gmail.com'  # আপনার Gmail
+EMAIL_HOST_PASSWORD = 'cakf hzju mwgz xgbp'  # App Password (স্পেস ছাড়া)
+DEFAULT_FROM_EMAIL = 'Your Name <hmdhimel1234@gmail.com>'
+
+
+# Email configuration
+# For development DEBUG=True uses console backend. Configure real SMTP in production.
+#DEFAULT_FROM_EMAIL = 'noreply@example.com'
+#if DEBUG:
+    #EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+#else:
+   # EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+   # EMAIL_HOST = 'smtp.example.com'
+    #EMAIL_PORT = 587
+    #EMAIL_USE_TLS = True
+    #EMAIL_HOST_USER = 'your-smtp-user@example.com'
+    #EMAIL_HOST_PASSWORD = 'your-smtp-password' #
