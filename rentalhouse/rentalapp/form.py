@@ -176,6 +176,10 @@ class PropertySearchForm(forms.Form):
         return cleaned_data
 
 class BookingForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        self.property = kwargs.pop('property', None)
+        super().__init__(*args, **kwargs)
+
     class Meta:
         model = Bookings
         # duration_months is computed server-side from start/end dates
@@ -197,6 +201,10 @@ class BookingForm(forms.ModelForm):
 
             if start_date < timezone.now().date():
                 raise ValidationError("Start date cannot be in the past")
+
+        if self.property and start_date:
+            if start_date < self.property.available_from:
+                raise ValidationError(f"Start date cannot be before the property's available date ({self.property.available_from})")
 
         return cleaned_data
 

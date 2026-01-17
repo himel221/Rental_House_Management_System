@@ -315,6 +315,36 @@ def property_list(request):
     owner = get_object_or_404(Owners, user=request.user)
     properties = Properties.objects.filter(owner=owner)
     
+    # Handle search and filters
+    search_query = request.GET.get('search', '')
+    property_type = request.GET.get('property_type', '')
+    min_rent = request.GET.get('min_rent', '')
+    max_rent = request.GET.get('max_rent', '')
+    
+    if search_query:
+        properties = properties.filter(
+            Q(title__icontains=search_query) |
+            Q(city__icontains=search_query) |
+            Q(address__icontains=search_query)
+        )
+    
+    if property_type:
+        properties = properties.filter(property_type=property_type)
+    
+    if min_rent:
+        try:
+            min_rent = float(min_rent)
+            properties = properties.filter(rent_amount__gte=min_rent)
+        except ValueError:
+            pass
+    
+    if max_rent:
+        try:
+            max_rent = float(max_rent)
+            properties = properties.filter(rent_amount__lte=max_rent)
+        except ValueError:
+            pass
+    
     return render(request, 'properties/property_list.html', {'properties': properties})
 
 @login_required
@@ -448,7 +478,7 @@ def book_property(request, property_id):
     tenant = get_object_or_404(Tenants, user=request.user)
     
     if request.method == 'POST':
-        form = BookingForm(request.POST)
+        form = BookingForm(request.POST, property=property_obj)
         if form.is_valid():
             booking = form.save(commit=False)
             booking.tenant = tenant
@@ -531,7 +561,7 @@ def book_property(request, property_id):
             messages.success(request, 'Property booked successfully!')
             return redirect('tenant_dashboard')
     else:
-        form = BookingForm()
+        form = BookingForm(property=property_obj)
     
     context = {
         'property': property_obj,
@@ -918,7 +948,7 @@ def owner_booking_list(request):
         'bookings': bookings,
         'owner': owner,
     }
-    return render(request, 'owner/owner_booking_list.html', context)
+    return render(request, 'owner_booking_list.html', context)
 
 @login_required
 def owner_payments(request):

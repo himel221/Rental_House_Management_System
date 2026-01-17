@@ -11,6 +11,38 @@
         </a>
     </div>
 
+    <!-- Search and Filter Form -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-4">
+                    <input type="text" name="search" class="form-control" placeholder="Search by title, city, or address" value="{{ request.GET.search }}">
+                </div>
+                <div class="col-md-3">
+                    <select name="property_type" class="form-select">
+                        <option value="">All Types</option>
+                        <option value="apartment" {% if request.GET.property_type == 'apartment' %}selected{% endif %}>Apartment</option>
+                        <option value="house" {% if request.GET.property_type == 'house' %}selected{% endif %}>House</option>
+                        <option value="villa" {% if request.GET.property_type == 'villa' %}selected{% endif %}>Villa</option>
+                        <option value="condo" {% if request.GET.property_type == 'condo' %}selected{% endif %}>Condominium</option>
+                        <option value="studio" {% if request.GET.property_type == 'studio' %}selected{% endif %}>Studio</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <input type="number" name="min_rent" class="form-control" placeholder="Min Rent" value="{{ request.GET.min_rent }}">
+                </div>
+                <div class="col-md-2">
+                    <input type="number" name="max_rent" class="form-control" placeholder="Max Rent" value="{{ request.GET.max_rent }}">
+                </div>
+                <div class="col-md-1">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     {% if properties %}
     <div class="row">
         {% for property in properties %}
